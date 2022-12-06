@@ -1,0 +1,39 @@
+users
+- id, username, ...
+
+------------------------------------------------------------
+
+rooms
+- id, room_type_id, ...
+------------------------------------------------------------
+
+room_types
+- id, name, ...
+
+------------------------------------------------------------
+
+room_names
+- id, name
+
+------------------------------------------------------------
+
+room_members
+- id, room_id, user_id, is_active, ...
+
+------------------------------------------------------------
+
+active_room_settings
+- id, room_id, room_setting_id, room_setting_value_id, ...
+
+room_setting
+- id, name, ...
+
+room_setting_values
+- id, room_setting_id, value, ...
+
+------------------------------------------------------------
+messages
+- id, room_id, user_id, message, date_created, ...
+
+message_settings
+- id, user_id, message_id, ...
