@@ -1,0 +1,27 @@
+creation flow
+	user can create a group
+
+group join flow
+	only group admins can add new members in the group
+	only admins can remove users of any type from group	
+
+messaging flow
+	only group members can send a message in the group
+
+messaging forwarding
+	group members can forward a message from the group to other groups and personal chats
+
+group admin flow
+	the user who creates the group is the initial admin of the group
+	only admins can create new admins
+	
+
+
+===== CREATION FLOW DETAILS =====
+user enters groupname and presses create group button 
+then it is checked if group already exists with current name
+if (group exists)
+	throw error "group already exists" 
+create room with a provided group name
+add current user to the group
+make the current user the admin of the group

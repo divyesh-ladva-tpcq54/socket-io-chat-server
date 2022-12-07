@@ -29,6 +29,9 @@ export class Message extends Model<MessageAttributes, MessageCreationAttributes>
   @Column
   declare room_id: number;
 
+  @Column
+  declare message: string;
+
   @Column({
     type: "TIMESTAMP",
     defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),

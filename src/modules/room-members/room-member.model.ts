@@ -1,7 +1,8 @@
 import { Optional } from "sequelize";
-import { Model, Column, Table, PrimaryKey, Unique, AutoIncrement, Sequelize, ForeignKey, BelongsTo } from "sequelize-typescript";
+import { Model, Column, Table, PrimaryKey, Unique, AutoIncrement, Sequelize, ForeignKey, BelongsTo, HasMany } from "sequelize-typescript";
 import { Room } from "../rooms/room.model";
 import { User } from "../users/user.model";
+import { RoomAdmin } from "./room-admin.model";
 
 export interface RoomMemberAttributes {
   id: number;
@@ -42,8 +43,14 @@ export class RoomMember extends Model<RoomMemberAttributes, RoomMemberCreationAt
   declare updatedAt: string;
 
   @BelongsTo(() => User, 'user_id')
-  declare user: User[]
+  declare user: User
 
   @BelongsTo(() => Room, 'room_id')
-  declare room: Room[]
+  declare room: Room
+
+  @HasMany(() => RoomAdmin, {
+    foreignKey: 'room_member_id',
+    sourceKey: 'id'
+  })
+  declare room_admins: RoomAdmin[]
 }

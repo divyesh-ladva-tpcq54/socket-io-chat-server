@@ -4,7 +4,7 @@ import { MessageService } from "../../messages/message.service";
 import { RoomService } from "../../rooms/room.service";
 import { User } from "../../users/user.model";
 import { UserService } from "../../users/user.service";
-import { ActiveUserHolder } from "../ActiveUserHolder";
+import { ActiveUserHolder } from "../active-user-holder";
 import { SocketEvents } from "../events";
 import { IMessagesFullObjectEmit, IPrivateMessageData } from "../types";
 
@@ -17,10 +17,10 @@ export class PrivateMessageHandler {
     private activeUserHolder: ActiveUserHolder
   ) { }
 
-  public handler = async (io: Server, socket: Socket, data: IPrivateMessageData) => {
+  public handler = async (io: Server, socket: Socket, currentUser: User, data: IPrivateMessageData) => {
     try {
       // store in database if valid
-      const { error, receiverUser, message } = await this.dbOperations(socket, data);
+      const { error, receiverUser, message } = await this.dbOperations(socket, currentUser, data);
       if (error || !receiverUser) {
         const responseData: IMessagesFullObjectEmit = {
           messages: [{
@@ -29,7 +29,7 @@ export class PrivateMessageHandler {
             sender: {
               id: 1,
               username: 'system',
-              idAdmin: true,
+              isAdmin: true,
             },
             isForwarded: false,
           }]
@@ -52,32 +52,32 @@ export class PrivateMessageHandler {
             sender: {
               id: 1,
               username: 'system',
-              idAdmin: true,
+              isAdmin: true,
             },
             isForwarded: false,
           }]
         };
   
-        socket.emit(SocketEvents.privateMessage, responseData);
+        io.sockets.to(this.activeUserHolder.getUserSockets(currentUser.username)).emit(SocketEvents.privateMessage, responseData);
         return;
       }
 
       // message successfully added in the database, now need to convey the message to the user
-      await this.socketOperations(io, socket, receiverUser, data);
+      await this.socketOperations(io, socket, currentUser, receiverUser, data);
     } catch (error) {
       console.log(error);
     }
   }
 
-  private async socketOperations(io: Server, socket: Socket, receiverUser: User, data: IPrivateMessageData) {
+  private async socketOperations(io: Server, socket: Socket, currentUser: User, receiverUser: User, data: IPrivateMessageData) {
 
     const responseData: IMessagesFullObjectEmit = {
       messages: [{
         id: 123,
         message: data.message,
         sender: {
-          id: data.sender.id,
-          username: data.sender.username,
+          id: currentUser.id,
+          username: currentUser.username,
         },
       }]
     };
@@ -86,10 +86,10 @@ export class PrivateMessageHandler {
     io.sockets.to(this.activeUserHolder.getUserSockets(receiverUser.username)).emit(SocketEvents.privateMessage, responseData);
 
     // send message to all the sockets of sender also
-    io.sockets.to(this.activeUserHolder.getUserSockets(data.sender.username)).emit(SocketEvents.privateMessage, responseData);
+    io.sockets.to(this.activeUserHolder.getUserSockets(currentUser.username)).emit(SocketEvents.privateMessage, responseData);
   }
 
-  private async dbOperations(socket: Socket, data: IPrivateMessageData) {
+  private async dbOperations(socket: Socket, currentUser: User, data: IPrivateMessageData) {
     // check if receiver exists on the system 
     const receiverUser = await this.userService.findOne(data.to);
 
@@ -100,11 +100,11 @@ export class PrivateMessageHandler {
     }
 
     // find mutual room
-    let room = await this.roomService.findMutualPrivateChatRoom(data.sender.id, receiverUser.id);
+    let room = await this.roomService.findMutualPrivateChatRoom(currentUser.id, receiverUser.id);
 
     // if private chat does not exist, create a new mutual room
     if (!room) {
-      room = await this.roomService.createPrivateChatRoom(data.sender.id, receiverUser.id);
+      room = await this.roomService.createPrivateChatRoom(currentUser.id, receiverUser.id);
     }
     
     // if still room is not created return error
@@ -114,7 +114,7 @@ export class PrivateMessageHandler {
     }
 
     // add message
-    const message = await this.messageService.sendMessage(room.id, data.sender.id, data.message);
+    const message = await this.messageService.sendMessage(room.id, currentUser.id, data.message);
 
     return {
       message, 

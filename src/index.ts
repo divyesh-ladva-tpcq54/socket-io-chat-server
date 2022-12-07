@@ -4,10 +4,12 @@ import { App } from "./App";
 import { connectDB } from "./modules/database";
 import { container } from 'tsyringe';
 import { SocketServer } from './socket-server';
+import dotenv from 'dotenv'
 
 const httpServerPort = 3344;
 const webSocketPort = 3434;
 
+dotenv.config({});
 const httpServer = http.createServer(container.resolve(App).getInstance());
 const socketServer = container.resolve(SocketServer).getInstance();
 

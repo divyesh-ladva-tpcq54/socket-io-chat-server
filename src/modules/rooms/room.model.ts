@@ -49,6 +49,12 @@ export class Room extends Model<RoomAttributes, RoomCreationAttributes> {
   })
   declare messages: Message[]
 
+  @HasMany(() => RoomMember, {
+    foreignKey: 'room_id',
+    sourceKey: 'id'
+  })
+  declare roomMembers: RoomMember[]
+
   @BelongsTo(() => RoomType, {
     foreignKey: 'type_id',
     targetKey: 'id'
@@ -59,7 +65,7 @@ export class Room extends Model<RoomAttributes, RoomCreationAttributes> {
     foreignKey: 'room_id',
     sourceKey: 'id'
   })
-  declare name: RoomName;
+  declare roomName: RoomName;
 
   @HasMany(() => ActiveRoomSetting, {
     foreignKey: 'room_id',

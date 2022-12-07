@@ -14,7 +14,27 @@ export class RoomService {
     return await this.roomRepository.createPrivateChatRoom(userId_1, userId_2);
   }
 
-  async findUserGroupsWithName(userId: number, groupName: string): Promise<Room[]> {
-    return this.roomRepository.findUserGroupsByName(userId, groupName);
+  async findGroupsWithName(groupName: string): Promise<Room | null> {
+    return this.roomRepository.findGroupByName(groupName);
+  }
+
+  async createGroupChatRoom(userId: number, groupName: string): Promise<Room | null> {
+    return this.roomRepository.createGroupChatRoom(userId, groupName);
+  }
+
+  async findUserInGroup(userId: number, groupName: string) {
+    return this.roomRepository.findUserInGroup(userId, groupName);
+  }
+
+  async isUserGroupAdmin(userId: number, groupName: string): Promise<boolean> {
+    const groupAdmins = await this.roomRepository.getGroupAdmins(groupName);
+
+    for (const admin of groupAdmins) {
+      if (admin.user_id == userId) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 }

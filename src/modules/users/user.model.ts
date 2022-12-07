@@ -45,4 +45,10 @@ export class User extends Model<UserAttributes, UserCreationAttributes> {
     sourceKey: 'id'
   })
   declare messages: Message[]
+
+  @HasMany(() => RoomMember, {
+    foreignKey: 'user_id',
+    sourceKey: 'id'
+  })
+  declare roomMembers: RoomMember[];
 }

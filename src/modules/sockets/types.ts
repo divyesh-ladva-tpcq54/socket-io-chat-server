@@ -1,19 +1,20 @@
 export interface IPrivateMessageData {
   message: string,
-  sender: {
-    id: number,
-    username: string
-  },
   to: string
 }
 
 export interface IGroupMessageData {
   message: string,
-  sender: {
-    id: number,
-    username: string
-  },
   groupName: string
+}
+
+export interface IGroupCreateData {
+  groupName: string
+}
+
+export interface IGroupMemberAddData {
+  username: string;
+  groupName: string;
 }
 
 export interface IMessageObjectRender {
@@ -22,8 +23,12 @@ export interface IMessageObjectRender {
   sender: {
     id: number,
     username: string,
-    idAdmin?: boolean,
+    isAdmin?: boolean,
   },
+  group?: {
+    id: number, 
+    name: string,
+  }
   isForwarded?: boolean,
 }
 

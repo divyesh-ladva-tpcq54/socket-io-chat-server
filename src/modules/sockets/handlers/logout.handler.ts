@@ -1,12 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { injectable } from "tsyringe";
-import { UserService } from "../../users/user.service";
-import { ActiveUserHolder } from "../ActiveUserHolder";
+import { ActiveUserHolder } from "../active-user-holder";
 import { SocketEvents } from "../events";
 
 @injectable()
 export class LogoutHandler {
-  constructor(private userService: UserService, private activeUserHolder: ActiveUserHolder) { }
+  constructor(private activeUserHolder: ActiveUserHolder) { }
   
   public handler = async (io: Server, socket: Socket, username: string) => {
     this.activeUserHolder.findAndDeleteAllSockets(username)

@@ -1,12 +1,15 @@
-import { Server } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { singleton } from 'tsyringe';
 import { SocketEvents } from './modules/sockets/events';
 import { UserService } from './modules/users/user.service';
-import { PrivateMessageHandler } from './modules/sockets/handlers/PrivateMessageHandler';
-import { LogoutHandler } from './modules/sockets/handlers/LogoutHandler';
-import { ActiveUserHolder } from './modules/sockets/ActiveUserHolder';
-import { IGroupMessageData, IMessagesFullObjectEmit, IPrivateMessageData } from './modules/sockets/types';
-import { GroupMessageHandler } from './modules/sockets/handlers/GroupMessageHandler';
+import { PrivateMessageHandler } from './modules/sockets/handlers/private-message.handler';
+import { LogoutHandler } from './modules/sockets/handlers/logout.handler';
+import { ActiveUserHolder } from './modules/sockets/active-user-holder';
+import { IGroupCreateData, IGroupMemberAddData, IGroupMessageData, IMessagesFullObjectEmit, IPrivateMessageData } from './modules/sockets/types';
+import { GroupMessageHandler } from './modules/sockets/handlers/group-message.handler';
+import { GroupCreateHandler } from './modules/sockets/handlers/group-create.handler';
+import { GroupMemberAddHandler } from './modules/sockets/handlers/group-member-add.handler';
+import { ClientDisconnectHandler } from './modules/sockets/handlers/client-disconnect.handler';
 
 @singleton()
 export class SocketServer {
@@ -16,8 +19,11 @@ export class SocketServer {
     private userService: UserService,
     private privateMessageHandler: PrivateMessageHandler,
     private groupMessageHandler: GroupMessageHandler,
+    private groupCreateHandler: GroupCreateHandler,
+    private groupMemberAddHandler: GroupMemberAddHandler,
     private logoutHandler: LogoutHandler,
-    private activeUserHolder: ActiveUserHolder
+    private activeUserHolder: ActiveUserHolder,
+    private clientDisconnectHandler: ClientDisconnectHandler,
   ) {
     this.io = new Server({
       cors: {
@@ -32,6 +38,14 @@ export class SocketServer {
   }
 
   private registerEvents() {
+    // TODO add validation
+    // this middleware is called only once before connection
+    this.io.sockets.use((socket, next) => {
+
+      // call next after validation
+      next();
+    });
+
     // socket connected
     this.io.sockets.on(SocketEvents.connection, async (socket) => {         
       // check if user exists on server
@@ -47,7 +61,7 @@ export class SocketServer {
             sender: {
               id: 1,
               username: 'system',
-              idAdmin: true,
+              isAdmin: true,
             },
             isForwarded: false,
           }]
@@ -72,15 +86,14 @@ export class SocketServer {
           sender: {
             id: 1,
             username: 'system',
-            idAdmin: true,
+            isAdmin: true,
           },
           isForwarded: false,
         }]
       };
       socket.emit(SocketEvents.systemMessage, responseData);
 
-      // get messages that were sent when the user was offline
-
+      // TODO: get messages that were sent when the user was offline
 
       // user logout event
       socket.on(SocketEvents.logout, () => {
@@ -89,14 +102,33 @@ export class SocketServer {
 
       // private message event
       socket.on(SocketEvents.privateMessage, async (data: IPrivateMessageData) => {
-        this.privateMessageHandler.handler(this.io, socket, data);
+        this.privateMessageHandler.handler(this.io, socket, user, data);
+      });
+
+      // group create event 
+      socket.on(SocketEvents.groupCreate, async (data: IGroupCreateData) => {
+        this.groupCreateHandler.handler(this.io, socket, user, data);
+      });
+
+      // group member add event 
+      socket.on(SocketEvents.groupMemberAdd, async (data: IGroupMemberAddData) => {
+        this.groupMemberAddHandler.handler(this.io, socket, user, data);
+      });
+
+      // group member remove event 
+      socket.on(SocketEvents.groupMemberRemove, async (data: IGroupMemberAddData) => {
+        this.groupMemberAddHandler.handler(this.io, socket, user, data);
       });
 
       // group message event
       socket.on(SocketEvents.groupMessage, async (data: IGroupMessageData) => {
-        this.groupMessageHandler.handler(this.io, socket, data)
+        this.groupMessageHandler.handler(this.io, socket, user, data);
       });
 
+      // client disconnect event (not logout, but closed one of multiple tabs)
+      socket.on(SocketEvents.disconnected, () => {
+        this.clientDisconnectHandler.handler(this.io, socket, user);
+      })
     })
   }
 }

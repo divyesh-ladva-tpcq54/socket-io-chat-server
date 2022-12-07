@@ -4,6 +4,7 @@ import { ActiveMessageSetting } from "../message-settings/active-message-setting
 import { MessageSettingValue } from "../message-settings/message-setting-value.model";
 import { MessageSetting } from "../message-settings/message-setting.model";
 import { Message } from "../messages/message.model";
+import { RoomAdmin } from "../room-members/room-admin.model";
 import { RoomMember } from "../room-members/room-member.model";
 import { RoomName } from "../room-names/room-name.model";
 import { ActiveRoomSetting } from "../room-settings/active-room-setting.model";
@@ -25,6 +26,7 @@ export async function connectDB() {
       MessageSetting,
       Message,
       ActiveRoomSetting,
+      RoomAdmin,
       RoomSetting,
       RoomSettingValue,
       RoomMember,
